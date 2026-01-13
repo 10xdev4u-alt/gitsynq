@@ -10,6 +10,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/ssh"
+	"github.com/princetheprogrammerbtw/gitsynq/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -22,24 +23,24 @@ var statusCmd = &cobra.Command{
 
 func runStatus(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n📊 Sync Status")
+	ui.Green.Println("\n📊 Sync Status")
 
 	cfg, err := config.Load()
 	if err != nil {
-		red.Printf("❌ Error loading config: %v\n", err)
+		ui.Red.Printf("❌ Error loading config: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Local status
-	cyan.Println("═══ LOCAL REPOSITORY ═══")
+	ui.Cyan.Println("═══ LOCAL REPOSITORY ═══")
 	printLocalStatus()
 
 	// Remote status
-	cyan.Println("\n═══ REMOTE SERVER ═══")
+	ui.Cyan.Println("\n═══ REMOTE SERVER ═══")
 	printRemoteStatus(cfg)
 
 	// Sync recommendation
-	cyan.Println("\n═══ RECOMMENDATION ═══")
+	ui.Cyan.Println("\n═══ RECOMMENDATION ═══")
 	printRecommendation(cfg)
 }
 
@@ -55,16 +56,16 @@ func printLocalStatus() {
 	// Uncommitted changes
 	status, _ := exec.Command("git", "status", "--porcelain").Output()
 	if len(status) > 0 {
-		yellow.Printf("⚠️  Uncommitted changes: %d files\n", len(strings.Split(strings.TrimSpace(string(status)), "\n")))
+		ui.Yellow.Printf("⚠️  Uncommitted changes: %d files\n", len(strings.Split(strings.TrimSpace(string(status)), "\n")))
 	} else {
-		green.Println("✅ Working tree clean")
+		ui.Green.Println("✅ Working tree clean")
 	}
 
 	// Unpushed commits
 	unpushed, _ := exec.Command("git", "log", "@{u}..HEAD", "--oneline").Output()
 	if len(unpushed) > 0 {
 		lines := strings.Split(strings.TrimSpace(string(unpushed)), "\n")
-		yellow.Printf("📤 Unpushed commits: %d\n", len(lines))
+		ui.Yellow.Printf("📤 Unpushed commits: %d\n", len(lines))
 	}
 }
 
@@ -76,7 +77,7 @@ func printRemoteStatus(cfg *config.Config) {
 	client, err := ssh.NewClient(cfg.Server)
 	if err != nil {
 		s.Stop()
-		red.Printf("❌ Cannot connect: %v\n", err)
+		ui.Red.Printf("❌ Cannot connect: %v\n", err)
 		return
 	}
 	defer client.Close()
@@ -106,7 +107,7 @@ func printRemoteStatus(cfg *config.Config) {
 	s.Stop()
 
 	if err != nil {
-		red.Printf("❌ Error checking remote: %v\n", err)
+		ui.Red.Printf("❌ Error checking remote: %v\n", err)
 		return
 	}
 
@@ -126,18 +127,18 @@ func printRemoteStatus(cfg *config.Config) {
 		fmt.Printf("📝 Last commit: %s\n", info["COMMIT"])
 
 		if info["CLEAN"] == "true" {
-			green.Println("✅ Working tree clean")
+			ui.Green.Println("✅ Working tree clean")
 		} else {
-			yellow.Printf("⚠️  Uncommitted changes: %s files\n", info["CHANGES"])
+			ui.Yellow.Printf("⚠️  Uncommitted changes: %s files\n", info["CHANGES"])
 		}
 	} else {
-		yellow.Println("📭 Repository not found on server")
+		ui.Yellow.Println("📭 Repository not found on server")
 		fmt.Println("💡 Run 'gitsync push --full' to initialize")
 	}
 }
 
 func printRecommendation(cfg *config.Config) {
-	yellow.Println("💡 Suggested actions:")
+	ui.Yellow.Println("💡 Suggested actions:")
 	fmt.Println("   • Run 'gitsync push' if you have local changes to sync")
 	fmt.Println("   • Run 'gitsync pull' if you worked on the server")
 	fmt.Println("   • Run 'gitsync pull --push' to sync and push to GitHub")
