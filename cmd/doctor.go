@@ -51,7 +51,7 @@ func runDoctor(cmd *cobra.Command, args []string) {
 
 		// 4. Check Remote Git
 		fmt.Print("🔍 Checking Git on remote server... ")
-		output, err := client.Run("git --version")
+		output, err := client.Run(cmd.Context(), "git --version")
 		if err != nil {
 			ui.Red.Printf("❌ Failed: %v\n", err)
 			fmt.Println("   Output:", output)
@@ -61,7 +61,7 @@ func runDoctor(cmd *cobra.Command, args []string) {
 
 		// 5. Check Remote Path
 		fmt.Printf("🔍 Checking remote path %s... ", cfg.Server.RemotePath)
-		_, err = client.Run(fmt.Sprintf("mkdir -p %s", cfg.Server.RemotePath))
+		_, err = client.Run(cmd.Context(), fmt.Sprintf("mkdir -p %s", cfg.Server.RemotePath))
 		if err != nil {
 			ui.Red.Printf("❌ Failed: %v\n", err)
 		} else {

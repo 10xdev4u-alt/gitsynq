@@ -103,7 +103,7 @@ func printRemoteStatus(cfg *config.Config) {
 		fi
 	`, repoPath, repoPath)
 
-	output, err := client.Run(checkScript)
+	output, err := client.Run(cmd.Context(), checkScript)
 	s.Stop()
 
 	if err != nil {

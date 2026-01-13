@@ -93,69 +93,125 @@ func runPull(cmd *cobra.Command, args []string) {
 		echo "BUNDLE_CREATED"
 	`, remoteRepoPath, remoteBundlePath)
 
-	output, err := client.Run(createBundleScript)
-	s.Stop()
+		output, err := client.Run(cmd.Context(), createBundleScript)
 
-	if strings.Contains(output, "UNCOMMITTED_CHANGES") {
-		ui.Yellow.Println("⚠️  Warning: Uncommitted changes exist on the remote server.")
-		ui.Yellow.Println("   These changes will NOT be included in the sync until you commit them on the server.")
-	}
-
-	if err != nil || !strings.Contains(output, "BUNDLE_CREATED") {
-		ui.Red.Printf("❌ Failed to create bundle on server: %v\n", err)
-		if verbose {
-			fmt.Println("Output:", output)
-		}
-		os.Exit(1)
-	}
-
-	ui.Green.Println("✅ Bundle created on server")
-
-	// Step 3: Download bundle
-	s.Suffix = " Downloading bundle..."
-	s.Start()
-
-	localBundlePath := filepath.Join(cfg.Bundle.Directory, remoteBundleName)
-
-	bar := progressbar.DefaultBytes(
-		-1, // We'll set the total once the transfer starts and we have the size
-		"🚀 Downloading bundle",
-	)
-
-	err = client.Download(remoteBundlePath, localBundlePath, func(current, total int64) {
-		if bar.GetMax() == -1 && total > 0 {
-			bar.ChangeMax64(total)
-		}
-		bar.Set64(current)
-	})
-
-	if err != nil {
-		ui.Red.Printf("❌ Download failed: %v\n", err)
-		os.Exit(1)
-	}
-
-	info, _ := os.Stat(localBundlePath)
-	ui.Green.Printf("\n✅ Downloaded: %s (%s)\n", remoteBundleName, utils.FormatBytes(info.Size()))
-
-	// Step 4: Merge bundle into local repo
-	s.Suffix = " Merging changes..."
-	s.Start()
-
-	if err := bundle.Merge(localBundlePath, cfg.Project.Branch); err != nil {
 		s.Stop()
-		ui.Red.Printf("❌ Merge failed: %v\n", err)
-		ui.Yellow.Println("💡 You may need to resolve conflicts manually")
-		os.Exit(1)
-	}
 
-	s.Stop()
-	ui.Green.Println("✅ Changes merged successfully!")
+	
 
-	// Step 5: Cleanup remote bundle
-	s.Suffix = " Cleaning up..."
-	s.Start()
-	client.Run(fmt.Sprintf("rm -f '%s'", remoteBundlePath))
-	s.Stop()
+		if strings.Contains(output, "UNCOMMITTED_CHANGES") {
+
+			ui.Yellow.Println("⚠️  Warning: Uncommitted changes exist on the remote server.")
+
+			ui.Yellow.Println("   These changes will NOT be included in the sync until you commit them on the server.")
+
+		}
+
+	
+
+		if err != nil || !strings.Contains(output, "BUNDLE_CREATED") {
+
+			ui.Red.Printf("❌ Failed to create bundle on server: %v\n", err)
+
+			if verbose {
+
+				fmt.Println("Output:", output)
+
+			}
+
+			os.Exit(1)
+
+		}
+
+	
+
+		ui.Green.Println("✅ Bundle created on server")
+
+	
+
+		// Step 3: Download bundle
+
+		localBundlePath := filepath.Join(cfg.Bundle.Directory, remoteBundleName)
+
+	
+
+		bar := progressbar.DefaultBytes(
+
+			-1, // We'll set the total once the transfer starts and we have the size
+
+			"🚀 Downloading bundle",
+
+		)
+
+	
+
+		err = client.Download(remoteBundlePath, localBundlePath, func(current, total int64) {
+
+			if bar.GetMax() == -1 && total > 0 {
+
+				bar.ChangeMax64(total)
+
+			}
+
+			bar.Set64(current)
+
+		})
+
+	
+
+		if err != nil {
+
+			ui.Red.Printf("❌ Download failed: %v\n", err)
+
+			os.Exit(1)
+
+		}
+
+	
+
+		info, _ := os.Stat(localBundlePath)
+
+		ui.Green.Printf("\n✅ Downloaded: %s (%s)\n", remoteBundleName, utils.FormatBytes(info.Size()))
+
+	
+
+		// Step 4: Merge bundle into local repo
+
+		s.Suffix = " Merging changes..."
+
+		s.Start()
+
+	
+
+		if err := bundle.Merge(localBundlePath, cfg.Project.Branch); err != nil {
+
+			s.Stop()
+
+			ui.Red.Printf("❌ Merge failed: %v\n", err)
+
+			ui.Yellow.Println("💡 You may need to resolve conflicts manually")
+
+			os.Exit(1)
+
+		}
+
+	
+
+		s.Stop()
+
+		ui.Green.Println("✅ Changes merged successfully!")
+
+	
+
+		// Step 5: Cleanup remote bundle
+
+		s.Suffix = " Cleaning up..."
+
+		s.Start()
+
+		client.Run(cmd.Context(), fmt.Sprintf("rm -f '%s'", remoteBundlePath))
+
+		s.Stop()
 
 	// Step 6: Auto-push to origin (if requested)
 	if autoPush {

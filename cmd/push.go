@@ -136,7 +136,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	remoteRepoPath := filepath.Join(cfg.Server.RemotePath, cfg.Project.Name)
 	setupScript := generateSetupScript(remoteBundlePath, remoteRepoPath, cfg.Project.Branch)
 
-	output, err := client.Run(setupScript)
+	output, err := client.Run(cmd.Context(), setupScript)
 	s.Stop()
 
 	if err != nil {

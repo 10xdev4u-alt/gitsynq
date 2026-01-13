@@ -55,7 +55,7 @@ func runBackup(cmd *cobra.Command, args []string) {
 	remoteRepoPath := filepath.Join(cfg.Server.RemotePath, cfg.Project.Name)
 	remoteBackupPath := filepath.Join(cfg.Server.RemotePath, backupName)
 
-	_, err = client.Run(fmt.Sprintf("cd %s && git bundle create %s --all", remoteRepoPath, remoteBackupPath))
+	_, err = client.Run(cmd.Context(), fmt.Sprintf("cd %s && git bundle create %s --all", remoteRepoPath, remoteBackupPath))
 	s.Stop()
 
 	if err != nil {
@@ -90,5 +90,5 @@ func runBackup(cmd *cobra.Command, args []string) {
 	ui.Green.Printf("\n✅ Backup saved: %s (%s)\n", localBackupPath, utils.FormatBytes(info.Size()))
 
 	// Cleanup remote
-	client.Run(fmt.Sprintf("rm -f %s", remoteBackupPath))
+	client.Run(cmd.Context(), fmt.Sprintf("rm -f %s", remoteBackupPath))
 }

@@ -4,6 +4,7 @@ package ssh
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -114,7 +115,8 @@ func (c *Client) Close() error {
 }
 
 // Run executes a command on the remote server and returns its combined stdout and stderr.
-func (c *Client) Run(command string) (string, error) {
+// It supports cancellation via the provided context.
+func (c *Client) Run(ctx context.Context, command string) (string, error) {
 	session, err := c.sshClient.NewSession()
 	if err != nil {
 		return "", fmt.Errorf("failed to create SSH session: %w", err)
@@ -125,8 +127,20 @@ func (c *Client) Run(command string) (string, error) {
 	session.Stdout = &stdout
 	session.Stderr = &stderr
 
-	if err := session.Run(command); err != nil {
-		return stdout.String() + stderr.String(), fmt.Errorf("command failed: %w", err)
+	// Handle cancellation
+	done := make(chan error, 1)
+	go func() {
+		done <- session.Run(command)
+	}()
+
+	select {
+	case <-ctx.Done():
+		session.Signal(ssh.SIGKILL)
+		return "", ctx.Err()
+	case err := <-done:
+		if err != nil {
+			return stdout.String() + stderr.String(), fmt.Errorf("command failed: %w", err)
+		}
 	}
 
 	return stdout.String(), nil

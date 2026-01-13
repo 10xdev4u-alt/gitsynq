@@ -53,6 +53,7 @@ func init() {
 	rootCmd.AddCommand(diffCmd)
 	rootCmd.AddCommand(historyCmd)
 	rootCmd.AddCommand(backupCmd)
+	rootCmd.AddCommand(hooksCmd)
 }
 
 func initConfig() {

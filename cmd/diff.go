@@ -41,7 +41,7 @@ func runDiff(cmd *cobra.Command, args []string) {
 	defer client.Close()
 
 	repoPath := fmt.Sprintf("%s/%s", cfg.Server.RemotePath, cfg.Project.Name)
-	output, err := client.Run(fmt.Sprintf("cd %s && git rev-parse HEAD", repoPath))
+	output, err := client.Run(cmd.Context(), fmt.Sprintf("cd %s && git rev-parse HEAD", repoPath))
 	if err != nil {
 		ui.Red.Printf("❌ Failed to get remote state: %v\n", err)
 		return
