@@ -9,6 +9,7 @@ import (
 )
 
 var (
+	version = "1.0.0" // default version, can be overridden by ldflags
 	cfgFile string
 	verbose bool
 
@@ -35,7 +36,7 @@ var rootCmd = &cobra.Command{
   No internet on server? No problem! 🚀
   
   Created by: PrinceTheProgrammer`,
-	Version: "1.0.0",
+	Version: version,
 }
 
 func Execute() error {
