@@ -12,6 +12,7 @@ Welcome to the GitSynq documentation. This guide will help you set up and use Gi
 - **Guides**
   - [Basic Workflow](guides/basic-workflow.md)
   - [Team Workflow](guides/team-workflow.md)
+  - [Installing Git Offline](guides/offline-git-installation.md)
   - [Troubleshooting](guides/troubleshooting.md)
 
 - **Reference**
