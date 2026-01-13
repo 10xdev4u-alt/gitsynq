@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
+	"github.com/princetheprogrammerbtw/gitsynq/internal/ui"
 	"github.com/princetheprogrammerbtw/gitsynq/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -24,24 +25,24 @@ func runHistory(cmd *cobra.Command, args []string) {
 
 	cfg, err := config.Load()
 	if err != nil {
-		red.Printf("❌ Error loading config: %v\n", err)
+		ui.Red.Printf("❌ Error loading config: %v\n", err)
 		os.Exit(1)
 	}
 
-	cyan.Println("\n🕒 Synchronization History (Local Bundles)")
+	ui.Cyan.Println("\n🕒 Synchronization History (Local Bundles)")
 
 	files, err := os.ReadDir(cfg.Bundle.Directory)
 	if err != nil {
 		if os.IsNotExist(err) {
-			yellow.Println("📭 No history found. Perform a 'push' or 'pull' first.")
+			ui.Yellow.Println("📭 No history found. Perform a 'push' or 'pull' first.")
 			return
 		}
-		red.Printf("❌ Failed to read bundle directory: %v\n", err)
+		ui.Red.Printf("❌ Failed to read bundle directory: %v\n", err)
 		os.Exit(1)
 	}
 
 	if len(files) == 0 {
-		yellow.Println("📭 No bundles found in", cfg.Bundle.Directory)
+		ui.Yellow.Println("📭 No bundles found in", cfg.Bundle.Directory)
 		return
 	}
 
