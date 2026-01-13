@@ -1,3 +1,4 @@
+// Package bundle handles Git bundle operations like creation, verification, and merging.
 package bundle
 
 import (
@@ -7,90 +8,101 @@ import (
 	"path/filepath"
 )
 
-// CreateFull creates a bundle with entire repository
+// CreateFull creates a Git bundle containing the entire repository history.
+// It includes all branches and tags.
 func CreateFull(outputPath string) error {
-	os.MkdirAll(filepath.Dir(outputPath), 0755)
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
+		return fmt.Errorf("failed to create bundle directory: %w", err)
+	}
 
 	cmd := exec.Command("git", "bundle", "create", outputPath, "--all")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v: %s", err, string(output))
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("git bundle create failed: %v: %s", err, string(output))
 	}
 	return nil
 }
 
-// CreateIncremental creates a bundle with only new commits
+// CreateIncremental creates a Git bundle containing only the commits that exist on the
+// specified branch but not on its remote tracking counterpart (origin/branch).
 func CreateIncremental(outputPath, branch string) error {
 	// First, check if we have a remote tracking branch
-	cmd := exec.Command("git", "rev-parse", "--verify", "origin/"+branch)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("no tracking branch found, use --full")
+	checkCmd := exec.Command("git", "rev-parse", "--verify", "origin/"+branch)
+	if err := checkCmd.Run(); err != nil {
+		return fmt.Errorf("no tracking branch found for %s, a full push is required", branch)
 	}
 
 	bundleCmd := exec.Command("git", "bundle", "create", outputPath,
 		fmt.Sprintf("origin/%s..%s", branch, branch))
 
-	output, err := bundleCmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v: %s", err, string(output))
+	if output, err := bundleCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("git bundle incremental create failed: %v: %s", err, string(output))
 	}
 
 	info, err := os.Stat(outputPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to stat created bundle: %w", err)
 	}
+
+	// Minimal bundle size check (empty bundles are around 100 bytes)
 	if info.Size() < 100 {
 		os.Remove(outputPath)
-		return fmt.Errorf("no new commits to bundle")
+		return fmt.Errorf("no new commits found to bundle")
 	}
 
 	return nil
 }
 
-// Merge merges a bundle into the current repository
+// Merge takes a path to a Git bundle and merges the changes into the local repository
+// on the specified branch.
 func Merge(bundlePath, branch string) error {
+	// Verify bundle
 	verifyCmd := exec.Command("git", "bundle", "verify", bundlePath)
-	if err := verifyCmd.Run(); err != nil {
-		return fmt.Errorf("invalid bundle: %v", err)
+	if output, err := verifyCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("invalid or incompatible bundle: %v: %s", err, string(output))
 	}
 
-	exec.Command("git", "remote", "remove", "bundle").Run()
+	// Ensure any old bundle remote is removed
+	_ = exec.Command("git", "remote", "remove", "bundle").Run()
+
 	addCmd := exec.Command("git", "remote", "add", "bundle", bundlePath)
 	if err := addCmd.Run(); err != nil {
-		return fmt.Errorf("failed to add bundle remote: %v", err)
+		return fmt.Errorf("failed to add bundle as remote: %w", err)
 	}
+	defer func() {
+		_ = exec.Command("git", "remote", "remove", "bundle").Run()
+	}()
 
+	// Fetch from bundle
 	fetchCmd := exec.Command("git", "fetch", "bundle")
 	if output, err := fetchCmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("fetch failed: %s", string(output))
+		return fmt.Errorf("failed to fetch from bundle: %s", string(output))
 	}
 
+	// Merge
 	mergeCmd := exec.Command("git", "merge", "bundle/"+branch, "--no-edit")
 	if output, err := mergeCmd.CombinedOutput(); err != nil {
-		mergeCmd = exec.Command("git", "merge", "bundle/master", "--no-edit")
-		if output2, err2 := mergeCmd.CombinedOutput(); err2 != nil {
-			return fmt.Errorf("merge failed: %s %s", string(output), string(output2))
+		// Fallback to master if main branch merge fails (common transition issue)
+		mergeCmdMaster := exec.Command("git", "merge", "bundle/master", "--no-edit")
+		if output2, err2 := mergeCmdMaster.CombinedOutput(); err2 != nil {
+			return fmt.Errorf("merge failed (tried %s and master): %s", branch, string(output)+string(output2))
 		}
 	}
 
-	exec.Command("git", "remote", "remove", "bundle").Run()
-
 	return nil
 }
 
-// PushToOrigin pushes to the origin remote
+// PushToOrigin pushes the specified branch to the 'origin' remote.
 func PushToOrigin(branch string) error {
 	cmd := exec.Command("git", "push", "origin", branch)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%v: %s", err, string(output))
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("git push origin failed: %v: %s", err, string(output))
 	}
 	return nil
 }
 
-// ShowRecentCommits displays recent commits
+// ShowRecentCommits prints the last n commits to stdout using a pretty graph format.
 func ShowRecentCommits(n int) {
-	cmd := exec.Command("git", "log", fmt.Sprintf("-%d", n), "--oneline", "--graph")
+	cmd := exec.Command("git", "log", fmt.Sprintf("-%d", n), "--oneline", "--graph", "--color")
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+	_ = cmd.Run()
 }
