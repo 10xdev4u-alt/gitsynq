@@ -19,7 +19,7 @@ var initCmd = &cobra.Command{
 
 func runInit(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n🎯 Initializing GitSync Configuration\n")
+	green.Println("\n🎯 Initializing GitSync Configuration")
 
 	reader := bufio.NewReader(os.Stdin)
 	var projectName, serverIP, username, remotePath string

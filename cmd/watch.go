@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +19,7 @@ var watchCmd = &cobra.Command{
 
 func runWatch(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n👀 Watching for changes... (Press Ctrl+C to stop)\n")
+	green.Println("\n👀 Watching for changes... (Press Ctrl+C to stop)")
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {

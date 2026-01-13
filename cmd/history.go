@@ -28,7 +28,7 @@ func runHistory(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	cyan.Println("\n🕒 Synchronization History (Local Bundles)\n")
+	cyan.Println("\n🕒 Synchronization History (Local Bundles)")
 
 	files, err := os.ReadDir(cfg.Bundle.Directory)
 	if err != nil {

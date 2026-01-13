@@ -27,7 +27,7 @@ func runDiff(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	cyan.Println("\n🔍 Comparing local branch with remote server...\n")
+	cyan.Println("\n🔍 Comparing local branch with remote server...")
 
 	// Step 1: Connect to server to get last commit
 	client, err := ssh.NewClient(cfg.Server)

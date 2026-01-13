@@ -132,13 +132,22 @@ func (c *Client) Run(command string) (string, error) {
 	return stdout.String(), nil
 }
 
-// Upload transfers a local file to the remote server via SFTP.
-func (c *Client) Upload(localPath, remotePath string) error {
+// ProgressFunc is a callback for reporting transfer progress.
+type ProgressFunc func(current, total int64)
+
+// Upload transfers a local file to the remote server via SFTP with optional progress reporting.
+func (c *Client) Upload(localPath, remotePath string, onProgress ProgressFunc) error {
 	localFile, err := os.Open(localPath)
 	if err != nil {
 		return fmt.Errorf("failed to open local file: %w", err)
 	}
 	defer localFile.Close()
+
+	info, err := localFile.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat local file: %w", err)
+	}
+	total := info.Size()
 
 	// Ensure remote directory exists
 	remoteDir := filepath.Dir(remotePath)
@@ -152,20 +161,37 @@ func (c *Client) Upload(localPath, remotePath string) error {
 	}
 	defer remoteFile.Close()
 
-	if _, err := io.Copy(remoteFile, localFile); err != nil {
+	if onProgress == nil {
+		_, err = io.Copy(remoteFile, localFile)
+	} else {
+		pw := &progressWriter{
+			writer:     remoteFile,
+			total:      total,
+			onProgress: onProgress,
+		}
+		_, err = io.Copy(pw, localFile)
+	}
+
+	if err != nil {
 		return fmt.Errorf("failed to upload data: %w", err)
 	}
 
 	return nil
 }
 
-// Download transfers a remote file to the local machine via SFTP.
-func (c *Client) Download(remotePath, localPath string) error {
+// Download transfers a remote file to the local machine via SFTP with optional progress reporting.
+func (c *Client) Download(remotePath, localPath string, onProgress ProgressFunc) error {
 	remoteFile, err := c.sftpClient.Open(remotePath)
 	if err != nil {
 		return fmt.Errorf("failed to open remote file: %w", err)
 	}
 	defer remoteFile.Close()
+
+	info, err := remoteFile.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat remote file: %w", err)
+	}
+	total := info.Size()
 
 	// Ensure local directory exists
 	localDir := filepath.Dir(localPath)
@@ -179,9 +205,34 @@ func (c *Client) Download(remotePath, localPath string) error {
 	}
 	defer localFile.Close()
 
-	if _, err := io.Copy(localFile, remoteFile); err != nil {
+	if onProgress == nil {
+		_, err = io.Copy(localFile, remoteFile)
+	} else {
+		pw := &progressWriter{
+			writer:     localFile,
+			total:      total,
+			onProgress: onProgress,
+		}
+		_, err = io.Copy(pw, remoteFile)
+	}
+
+	if err != nil {
 		return fmt.Errorf("failed to download data: %w", err)
 	}
 
 	return nil
+}
+
+type progressWriter struct {
+	writer     io.Writer
+	current    int64
+	total      int64
+	onProgress ProgressFunc
+}
+
+func (pw *progressWriter) Write(p []byte) (int, error) {
+	n, err := pw.writer.Write(p)
+	pw.current += int64(n)
+	pw.onProgress(pw.current, pw.total)
+	return n, err
 }

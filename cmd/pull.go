@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/schollz/progressbar/v3"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/bundle"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/ssh"
@@ -36,7 +37,7 @@ func init() {
 
 func runPull(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n📥 Pulling from Remote Server\n")
+	green.Println("\n📥 Pulling from Remote Server")
 
 	// Load config
 	cfg, err := config.Load()
@@ -98,16 +99,26 @@ func runPull(cmd *cobra.Command, args []string) {
 	s.Start()
 
 	localBundlePath := filepath.Join(cfg.Bundle.Directory, remoteBundleName)
-	if err := client.Download(remoteBundlePath, localBundlePath); err != nil {
-		s.Stop()
+
+	bar := progressbar.DefaultBytes(
+		-1, // We'll set the total once the transfer starts and we have the size
+		"🚀 Downloading bundle",
+	)
+
+	err = client.Download(remoteBundlePath, localBundlePath, func(current, total int64) {
+		if bar.GetMax() == -1 && total > 0 {
+			bar.ChangeMax64(total)
+		}
+		bar.Set64(current)
+	})
+
+	if err != nil {
 		red.Printf("❌ Download failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	s.Stop()
-
 	info, _ := os.Stat(localBundlePath)
-	green.Printf("✅ Downloaded: %s (%s)\n", remoteBundleName, utils.FormatBytes(info.Size()))
+	green.Printf("\n✅ Downloaded: %s (%s)\n", remoteBundleName, utils.FormatBytes(info.Size()))
 
 	// Step 4: Merge bundle into local repo
 	s.Suffix = " Merging changes..."

@@ -19,7 +19,7 @@ var doctorCmd = &cobra.Command{
 
 func runDoctor(cmd *cobra.Command, args []string) {
 	printBanner()
-	fmt.Println("\n🩺 Running GitSynq Doctor...\n")
+	fmt.Println("\n🩺 Running GitSynq Doctor...")
 
 	// 1. Check Git
 	fmt.Print("🔍 Checking local Git... ")

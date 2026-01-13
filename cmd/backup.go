@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/schollz/progressbar/v3"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/ssh"
 	"github.com/princetheprogrammerbtw/gitsynq/pkg/utils"
@@ -22,7 +23,7 @@ var backupCmd = &cobra.Command{
 
 func runBackup(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n🛡️  Backing up Remote Repository\n")
+	green.Println("\n🛡️  Backing up Remote Repository")
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -70,16 +71,25 @@ func runBackup(cmd *cobra.Command, args []string) {
 	os.MkdirAll(backupDir, 0755)
 	localBackupPath := filepath.Join(backupDir, backupName)
 
-	if err := client.Download(remoteBackupPath, localBackupPath); err != nil {
-		s.Stop()
+	bar := progressbar.DefaultBytes(
+		-1,
+		"🚀 Downloading backup",
+	)
+
+	err = client.Download(remoteBackupPath, localBackupPath, func(current, total int64) {
+		if bar.GetMax() == -1 && total > 0 {
+			bar.ChangeMax64(total)
+		}
+		bar.Set64(current)
+	})
+
+	if err != nil {
 		red.Printf("❌ Download failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	s.Stop()
-	
 	info, _ := os.Stat(localBackupPath)
-	green.Printf("✅ Backup saved: %s (%s)\n", localBackupPath, utils.FormatBytes(info.Size()))
+	green.Printf("\n✅ Backup saved: %s (%s)\n", localBackupPath, utils.FormatBytes(info.Size()))
 
 	// Cleanup remote
 	client.Run(fmt.Sprintf("rm -f %s", remoteBackupPath))

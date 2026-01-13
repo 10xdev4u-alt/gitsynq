@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/schollz/progressbar/v3"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/bundle"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/ssh"
@@ -39,7 +40,7 @@ func init() {
 
 func runPush(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n📤 Pushing to Remote Server\n")
+	green.Println("\n📤 Pushing to Remote Server")
 
 	// Load config
 	cfg, err := config.Load()
@@ -104,14 +105,22 @@ func runPush(cmd *cobra.Command, args []string) {
 	defer client.Close()
 
 	remoteBundlePath := filepath.Join(cfg.Server.RemotePath, bundleName)
-	if err := client.Upload(bundlePath, remoteBundlePath); err != nil {
-		s.Stop()
+	
+	bar := progressbar.DefaultBytes(
+		info.Size(),
+		"🚀 Uploading bundle",
+	)
+
+	err = client.Upload(bundlePath, remoteBundlePath, func(current, total int64) {
+		bar.Set64(current)
+	})
+
+	if err != nil {
 		red.Printf("❌ Upload failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	s.Stop()
-	green.Println("✅ Bundle transferred successfully!")
+	green.Println("\n✅ Bundle transferred successfully!")
 
 	// Step 3: Setup/Update repo on server
 	s.Suffix = " Setting up repository on server..."

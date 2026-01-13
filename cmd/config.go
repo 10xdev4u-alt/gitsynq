@@ -40,7 +40,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	cyan.Println("\n⚙️  Current Configuration\n")
+	cyan.Println("\n⚙️  Current Configuration")
 
 	data, _ := yaml.Marshal(cfg)
 	fmt.Println(string(data))

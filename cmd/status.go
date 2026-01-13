@@ -22,7 +22,7 @@ var statusCmd = &cobra.Command{
 
 func runStatus(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n📊 Sync Status\n")
+	green.Println("\n📊 Sync Status")
 
 	cfg, err := config.Load()
 	if err != nil {
