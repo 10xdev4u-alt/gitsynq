@@ -12,6 +12,7 @@ import (
 	"github.com/princetheprogrammerbtw/gitsynq/internal/bundle"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/ssh"
+	"github.com/princetheprogrammerbtw/gitsynq/internal/ui"
 	"github.com/princetheprogrammerbtw/gitsynq/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -40,13 +41,13 @@ func init() {
 
 func runPush(cmd *cobra.Command, args []string) {
 	printBanner()
-	green.Println("\n📤 Pushing to Remote Server")
+	ui.Green.Println("\n📤 Pushing to Remote Server")
 
 	// Load config
 	cfg, err := config.Load()
 	if err != nil {
-		red.Printf("❌ Error loading config: %v\n", err)
-		yellow.Println("💡 Run 'gitsync init' first!")
+		ui.Red.Printf("❌ Error loading config: %v\n", err)
+		ui.Yellow.Println("💡 Run 'gitsync init' first!")
 		os.Exit(1)
 	}
 
@@ -73,7 +74,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	if bundleErr != nil {
 		// If incremental fails, try full
 		if !fullPush {
-			yellow.Println("⚠️  Incremental push failed. Attempting full bundle...")
+			ui.Yellow.Println("⚠️  Incremental push failed. Attempting full bundle...")
 			s.Suffix = " Creating full bundle..."
 			s.Start()
 			bundleErr = bundle.CreateFull(bundlePath)
@@ -81,16 +82,16 @@ func runPush(cmd *cobra.Command, args []string) {
 		}
 
 		if bundleErr != nil {
-			red.Printf("❌ Error creating bundle: %v\n", bundleErr)
+			ui.Red.Printf("❌ Error creating bundle: %v\n", bundleErr)
 			os.Exit(1)
 		}
 	}
 
-	green.Println("✅ Bundle created:", bundleName)
+	ui.Green.Println("✅ Bundle created:", bundleName)
 
 	// Get bundle size
 	info, _ := os.Stat(bundlePath)
-	cyan.Printf("📦 Bundle size: %s\n", utils.FormatBytes(info.Size()))
+	ui.Cyan.Printf("📦 Bundle size: %s\n", utils.FormatBytes(info.Size()))
 
 	// Step 2: Transfer to server
 	s.Suffix = fmt.Sprintf(" Transferring to %s@%s...", cfg.Server.User, cfg.Server.Host)
@@ -99,7 +100,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	client, err := ssh.NewClient(cfg.Server)
 	if err != nil {
 		s.Stop()
-		red.Printf("❌ SSH connection failed: %v\n", err)
+		ui.Red.Printf("❌ SSH connection failed: %v\n", err)
 		os.Exit(1)
 	}
 	defer client.Close()
@@ -116,11 +117,11 @@ func runPush(cmd *cobra.Command, args []string) {
 	})
 
 	if err != nil {
-		red.Printf("❌ Upload failed: %v\n", err)
+		ui.Red.Printf("❌ Upload failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	green.Println("\n✅ Bundle transferred successfully!")
+	ui.Green.Println("\n✅ Bundle transferred successfully!")
 
 	// Step 3: Setup/Update repo on server
 	s.Suffix = " Setting up repository on server..."
@@ -133,7 +134,7 @@ func runPush(cmd *cobra.Command, args []string) {
 	s.Stop()
 
 	if err != nil {
-		red.Printf("❌ Remote setup failed: %v\n", err)
+		ui.Red.Printf("❌ Remote setup failed: %v\n", err)
 		if verbose {
 			fmt.Println("Output:", output)
 		}
@@ -175,18 +176,18 @@ func generateSetupScript(bundlePath, repoPath, branch string) string {
 }
 
 func printPushSuccess(cfg *config.Config, bundleName string) {
-	green.Println("\n" + strings.Repeat("═", 50))
-	green.Println("          🎉 PUSH SUCCESSFUL! 🎉")
-	green.Println(strings.Repeat("═", 50))
+	ui.Green.Println("\n" + strings.Repeat("═", 50))
+	ui.Green.Println("          🎉 PUSH SUCCESSFUL! 🎉")
+	ui.Green.Println(strings.Repeat("═", 50))
 
-	cyan.Printf(`
+	ui.Cyan.Printf(`
 📦 Bundle:    %s
 🖥️  Server:    %s@%s
 📂 Path:      %s/%s
 
 `, bundleName, cfg.Server.User, cfg.Server.Host, cfg.Server.RemotePath, cfg.Project.Name)
 
-	yellow.Println("🔜 Next steps on server:")
+	ui.Yellow.Println("🔜 Next steps on server:")
 	fmt.Printf("   ssh %s@%s\n", cfg.Server.User, cfg.Server.Host)
 	fmt.Printf("   cd %s/%s\n", cfg.Server.RemotePath, cfg.Project.Name)
 	fmt.Println("   # Start coding! 🚀")
