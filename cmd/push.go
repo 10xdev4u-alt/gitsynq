@@ -43,6 +43,12 @@ func runPush(cmd *cobra.Command, args []string) {
 	printBanner()
 	ui.Green.Println("\n📤 Pushing to Remote Server")
 
+	// Run pre-push hook
+	if err := executeHook("pre-push"); err != nil {
+		ui.Red.Printf("❌ pre-push hook failed: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Load config
 	cfg, err := config.Load()
 	if err != nil {
@@ -143,6 +149,9 @@ func runPush(cmd *cobra.Command, args []string) {
 
 	// Success!
 	printPushSuccess(cfg, bundleName)
+
+	// Run post-push hook
+	_ = executeHook("post-push")
 }
 
 func generateSetupScript(bundlePath, repoPath, branch string) string {

@@ -40,6 +40,12 @@ func runPull(cmd *cobra.Command, args []string) {
 	printBanner()
 	ui.Green.Println("\n📥 Pulling from Remote Server")
 
+	// Run pre-pull hook
+	if err := executeHook("pre-pull"); err != nil {
+		ui.Red.Printf("❌ pre-pull hook failed: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Load config
 	cfg, err := config.Load()
 	if err != nil {
@@ -168,6 +174,9 @@ func runPull(cmd *cobra.Command, args []string) {
 
 	// Success!
 	printPullSuccess(cfg, autoPush)
+
+	// Run post-pull hook
+	_ = executeHook("post-pull")
 }
 
 func printPullSuccess(cfg *config.Config, pushed bool) {
