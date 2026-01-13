@@ -11,6 +11,7 @@ import (
 	"github.com/princetheprogrammerbtw/gitsynq/internal/bundle"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/ssh"
+	"github.com/princetheprogrammerbtw/gitsynq/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -88,7 +89,7 @@ func runPush(cmd *cobra.Command, args []string) {
 
 	// Get bundle size
 	info, _ := os.Stat(bundlePath)
-	cyan.Printf("📦 Bundle size: %s\n", formatBytes(info.Size()))
+	cyan.Printf("📦 Bundle size: %s\n", utils.FormatBytes(info.Size()))
 
 	// Step 2: Transfer to server
 	s.Suffix = fmt.Sprintf(" Transferring to %s@%s...", cfg.Server.User, cfg.Server.Host)
@@ -180,17 +181,4 @@ func printPushSuccess(cfg *config.Config, bundleName string) {
 	fmt.Printf("   ssh %s@%s\n", cfg.Server.User, cfg.Server.Host)
 	fmt.Printf("   cd %s/%s\n", cfg.Server.RemotePath, cfg.Project.Name)
 	fmt.Println("   # Start coding! 🚀")
-}
-
-func formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }

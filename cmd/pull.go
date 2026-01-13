@@ -11,6 +11,7 @@ import (
 	"github.com/princetheprogrammerbtw/gitsynq/internal/bundle"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
 	"github.com/princetheprogrammerbtw/gitsynq/internal/ssh"
+	"github.com/princetheprogrammerbtw/gitsynq/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -106,7 +107,7 @@ func runPull(cmd *cobra.Command, args []string) {
 	s.Stop()
 
 	info, _ := os.Stat(localBundlePath)
-	green.Printf("✅ Downloaded: %s (%s)\n", remoteBundleName, formatBytes(info.Size()))
+	green.Printf("✅ Downloaded: %s (%s)\n", remoteBundleName, utils.FormatBytes(info.Size()))
 
 	// Step 4: Merge bundle into local repo
 	s.Suffix = " Merging changes..."
