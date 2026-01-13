@@ -75,6 +75,11 @@ func runPull(cmd *cobra.Command, args []string) {
 	createBundleScript := fmt.Sprintf(`
 		cd "%s" || exit 1
 		
+		# Check for uncommitted changes
+		if ! git diff --quiet HEAD 2>/dev/null; then
+			echo "UNCOMMITTED_CHANGES"
+		fi
+		
 		# Create bundle with all refs
 		git bundle create "%s" --all
 		
@@ -83,6 +88,11 @@ func runPull(cmd *cobra.Command, args []string) {
 
 	output, err := client.Run(createBundleScript)
 	s.Stop()
+
+	if strings.Contains(output, "UNCOMMITTED_CHANGES") {
+		yellow.Println("⚠️  Warning: Uncommitted changes exist on the remote server.")
+		yellow.Println("   These changes will NOT be included in the sync until you commit them on the server.")
+	}
 
 	if err != nil || !strings.Contains(output, "BUNDLE_CREATED") {
 		red.Printf("❌ Failed to create bundle on server: %v\n", err)
