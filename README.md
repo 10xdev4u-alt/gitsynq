@@ -1,8 +1,8 @@
 # 🔄 GitSynq
 
-[![Go Version](https://img.shields.io/github/go-mod/go-version/princetheprogrammerbtw/gitsynq)](https://go.dev/)
-[![License](https://img.shields.io/github/license/princetheprogrammerbtw/gitsynq)](LICENSE)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/princetheprogrammerbtw/gitsynq/build.yml?branch=main)](https://github.com/princetheprogrammerbtw/gitsynq/actions)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/10xdev4u-alt/gitsynq)](https://go.dev/)
+[![License](https://img.shields.io/github/license/10xdev4u-alt/gitsynq)](LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/10xdev4u-alt/gitsynq/build.yml?branch=main)](https://github.com/10xdev4u-alt/gitsynq/actions)
 
 > **Sync Git repositories with air-gapped servers - No internet required on server! 🚀**
 
@@ -43,10 +43,10 @@ Thousands of developers, students, and researchers work on **remote servers** wi
 
 ```bash
 # Using Go
-go install github.com/princetheprogrammerbtw/gitsynq@latest
+go install github.com/10xdev4u-alt/gitsynq@latest
 
 # Or build from source
-git clone https://github.com/princetheprogrammerbtw/gitsynq
+git clone https://github.com/10xdev4u-alt/gitsynq
 cd gitsynq
 make install
 ```
@@ -128,4 +128,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ by [PrinceTheProgrammer](https://github.com/princetheprogrammerbtw)
+Built with ❤️ by [PrinceTheProgrammer](https://github.com/10xdev4u-alt)
