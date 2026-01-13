@@ -22,6 +22,7 @@ func runInit(cmd *cobra.Command, args []string) {
 	green.Println("\n🎯 Initializing GitSync Configuration\n")
 
 	reader := bufio.NewReader(os.Stdin)
+	var projectName, serverIP, username, remotePath string
 
 	// Check if we're in a git repo
 	if _, err := os.Stat(".git"); os.IsNotExist(err) {
@@ -31,22 +32,46 @@ func runInit(cmd *cobra.Command, args []string) {
 	}
 
 	// Get project name
-	cyan.Print("📁 Project name: ")
-	projectName, _ := reader.ReadString('\n')
-	projectName = strings.TrimSpace(projectName)
+	for {
+		cyan.Print("📁 Project name: ")
+		projectName, _ = reader.ReadString('\n')
+		projectName = strings.TrimSpace(projectName)
+		if projectName != "" {
+			break
+		}
+		red.Println("❌ Project name cannot be empty")
+	}
 
 	// Get server details
-	cyan.Print("🖥️  Server IP (e.g., 192.168.12.4): ")
-	serverIP, _ := reader.ReadString('\n')
-	serverIP = strings.TrimSpace(serverIP)
+	for {
+		cyan.Print("🖥️  Server IP/Hostname (e.g., 192.168.12.4): ")
+		serverIP, _ = reader.ReadString('\n')
+		serverIP = strings.TrimSpace(serverIP)
+		if serverIP != "" {
+			break
+		}
+		red.Println("❌ Server IP/Hostname cannot be empty")
+	}
 
-	cyan.Print("👤 Server username (e.g., prince): ")
-	username, _ := reader.ReadString('\n')
-	username = strings.TrimSpace(username)
+	for {
+		cyan.Print("👤 Server username (e.g., prince): ")
+		username, _ = reader.ReadString('\n')
+		username = strings.TrimSpace(username)
+		if username != "" {
+			break
+		}
+		red.Println("❌ Username cannot be empty")
+	}
 
-	cyan.Print("📂 Remote project path (e.g., ~/projects): ")
-	remotePath, _ := reader.ReadString('\n')
-	remotePath = strings.TrimSpace(remotePath)
+	for {
+		cyan.Print("📂 Remote project path (e.g., ~/projects): ")
+		remotePath, _ = reader.ReadString('\n')
+		remotePath = strings.TrimSpace(remotePath)
+		if remotePath != "" {
+			break
+		}
+		red.Println("❌ Remote path cannot be empty")
+	}
 
 	cyan.Print("🔑 SSH key path (leave empty for default): ")
 	sshKeyPath, _ := reader.ReadString('\n')
