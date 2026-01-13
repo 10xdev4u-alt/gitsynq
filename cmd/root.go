@@ -47,6 +47,9 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default: .gitsync.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+
+	// Add subcommands
+	rootCmd.AddCommand(initCmd)
 }
 
 func initConfig() {
