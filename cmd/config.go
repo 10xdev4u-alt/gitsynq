@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/princetheprogrammerbtw/gitsynq/internal/config"
+	"github.com/princetheprogrammerbtw/gitsynq/internal/ui"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
@@ -36,11 +37,11 @@ func runConfig(cmd *cobra.Command, args []string) {
 
 	cfg, err := config.Load()
 	if err != nil {
-		red.Printf("❌ Error loading config: %v\n", err)
+		ui.Red.Printf("❌ Error loading config: %v\n", err)
 		os.Exit(1)
 	}
 
-	cyan.Println("\n⚙️  Current Configuration")
+	ui.Cyan.Println("\n⚙️  Current Configuration")
 
 	data, _ := yaml.Marshal(cfg)
 	fmt.Println(string(data))
